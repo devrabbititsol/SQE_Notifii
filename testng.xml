@@ -4,7 +4,7 @@
 	<test name="chrometest">
   	<parameter name="browser" value="chrome"/>
 		<classes>
-			<class name="web.sqe_notifii.web_module.webtestclasses.TC_Notifii_Package" />
+			<class name="web.sqe_notifii.web_module.webtestclasses.TC_Login" />
 			<class name="com.fileupload.ReportUpload" />
 		</classes>
 	</test>
