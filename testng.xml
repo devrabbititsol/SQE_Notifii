@@ -2,7 +2,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 <suite name="Main Test Suite" verbose="1" >
 <test name="test">
-	<classes>		<class name= "api.sqe_notifii.api_module.apitestclasses.TC_API_New" />		<class name="com.fileupload.ReportUpload" />
+	<classes>		<class name= "api.sqe_notifii.api_module.apitestclasses.TC_QA_APIs" />		<class name="com.fileupload.ReportUpload" />
 	</classes>
 </test>
 </suite>
