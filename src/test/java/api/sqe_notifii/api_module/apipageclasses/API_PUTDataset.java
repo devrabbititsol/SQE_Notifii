@@ -8,7 +8,7 @@ public static String projectName = "sqe_notifii";
 
 			/*--------Default Dataset-----------*/
 
-public static final String datasetHeader1 = "TC_QA_APIs-Default";
+public static final String datasetHeader1 = "TC_API_Cr-Default";
 
 public static final String datasetResources1 = "api/users/2";
 public static final int requestType1 = 3;
@@ -23,8 +23,8 @@ public static final String apiName1 = "API_PUT";
 
  public static String body1  = "{\"raw_text\":\"{\\n    \\\"name\\\": \\\"morpheus\\\","
  + "\\n    \\\"job\\\": \\\"zion resident\\\"\\n}\","
- + "\"raw_id\":1163,"
- + "\"dataset_id\":1456,"
+ + "\"raw_id\":1159,"
+ + "\"dataset_id\":1448,"
  + "\"raw_type_id\":3}";
 
 }

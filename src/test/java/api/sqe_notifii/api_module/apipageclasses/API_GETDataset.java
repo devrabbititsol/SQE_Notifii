@@ -8,7 +8,7 @@ public static String projectName = "sqe_notifii";
 
 			/*--------Default Dataset-----------*/
 
-public static final String datasetHeader1 = "TC_QA_APIs-Default";
+public static final String datasetHeader1 = "TC_API_Cr-Default";
 
 public static final String datasetResources1 = "api/users/2";
 public static final int requestType1 = 1;
