@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>SmartQE</groupId>
@@ -17,7 +17,64 @@
 		<jdk.level>1.8</jdk.level>
 	</properties>
 
+
+
+	<repositories>
+        <repository>
+            <id>bintray</id>
+            <url>http://dl.bintray.com/epam/reportportal</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
 	<dependencies>
+
+
+<!-- https://mvnrepository.com/artifact/com.epam.reportportal/agent-java-testng -->
+<dependency>
+    <groupId>com.epam.reportportal</groupId>
+    <artifactId>agent-java-testng</artifactId>
+    <version>4.2.1</version>
+</dependency>
+
+
+
+		<dependency>
+			<groupId>com.epam.reportportal</groupId>
+			<artifactId>logger-java-logback</artifactId>
+			<version>4.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.epam.reportportal</groupId>
+			<artifactId>logger-java-log4j</artifactId>
+			<version>4.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.10.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.10.0</version>
+		</dependency>
+
+
+
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -30,17 +87,17 @@
 			<version>6.14.3</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>2.25.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
-            <version>2.25.1</version>
-        </dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>2.25.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<version>2.25.1</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
 		<dependency>
@@ -57,30 +114,25 @@
 			<version>7.3.0</version>
 		</dependency>
 
+
 		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
-	 	<dependency>
+		<dependency>
 		    <groupId>org.seleniumhq.selenium</groupId>
 		    <artifactId>selenium-java</artifactId>
-		    <version>3.14.0</version>
+		    <version>3.141.59</version>
 		</dependency>
+		
 
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-api</artifactId>
-			<version>3.14.0</version>
-		</dependency> 
+			<version>3.141.59</version>
+		</dependency>
 
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
-		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/com.relevantcodes/extentreports -->
-		<dependency>
-		    <groupId>com.relevantcodes</groupId>
-		    <artifactId>extentreports</artifactId>
-		    <version>2.41.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
@@ -127,13 +179,13 @@
 			<artifactId>winium-webdriver</artifactId>
 			<version>0.1.0-1</version>
 		</dependency>
-		
-		 <dependency>
-            <groupId>com.saucelabs</groupId>
-            <artifactId>sauce_testng</artifactId>
-            <version>2.1.23</version>
-            <scope>test</scope>
-        </dependency>
+
+		<dependency>
+			<groupId>com.saucelabs</groupId>
+			<artifactId>sauce_testng</artifactId>
+			<version>2.1.23</version>
+			<scope>test</scope>
+		</dependency>
 
 	</dependencies>
 
@@ -161,6 +213,20 @@
 						<!-- TestNG suite XML files -->
 						<suiteXmlFile>testng.xml</suiteXmlFile>
 					</suiteXmlFiles>
+
+					<!-- <properties>
+						<property>
+							<name>usedefaultlisteners</name> disabling default listeners is optional
+							<value>false</value>
+						</property>
+						<property>
+							<name>listener</name>
+							<value>com.epam.reportportal.testng.ReportPortalTestNGListener</value>
+						</property>
+
+					</properties> -->
+
+
 				</configuration>
 			</plugin>
 		</plugins>
@@ -175,11 +241,11 @@
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
-	    <profile>
+<profile>
 			<id>desktopsuite</id>
 			<build>
 				<plugins>
-				
+					<!-- Compiler plug-in -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
@@ -189,7 +255,7 @@
 							<target>${jdk.level}</target>
 						</configuration>
 					</plugin>
-					
+					<!-- Below plug-in is used to execute tests -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
@@ -205,6 +271,67 @@
 			</build>
 		</profile>
 
-		
+
+
+		<profile>
+			<id>ts_trest34</id>
+			<build>
+				<plugins>
+					<!-- Compiler plug-in -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>3.8.1</version>
+						<configuration>
+							<source>${jdk.level}</source>
+							<target>${jdk.level}</target>
+						</configuration>
+					</plugin>
+					<!-- Below plug-in is used to execute tests -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>3.0.0-M4</version>
+						<configuration>
+							<testFailureIgnore>true</testFailureIgnore>
+							<suiteXmlFiles>	
+								<suiteXmlFile>ts_trest34.xml</suiteXmlFile>
+							</suiteXmlFiles>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>ts_test_testset</id>
+			<build>
+				<plugins>
+					<!-- Compiler plug-in -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>3.8.1</version>
+						<configuration>
+							<source>${jdk.level}</source>
+							<target>${jdk.level}</target>
+						</configuration>
+					</plugin>
+					<!-- Below plug-in is used to execute tests -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>3.0.0-M4</version>
+						<configuration>
+							<testFailureIgnore>true</testFailureIgnore>
+							<suiteXmlFiles>	
+								<suiteXmlFile>ts_test_testset.xml</suiteXmlFile>
+							</suiteXmlFiles>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 	</profiles>
 </project>
