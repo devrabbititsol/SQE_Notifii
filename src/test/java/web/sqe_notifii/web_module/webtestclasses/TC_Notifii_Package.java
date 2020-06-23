@@ -120,9 +120,9 @@ public class TC_Notifii_Package extends BaseClass {
 			isElementDispalyed = true;			
 			setUP();			
 			setTestcaseName(browserName,"TC_Notifii_Package - " + configFileObj.getProperty("dataset" + (datasets)));
-			Login_screenTest(datasets);
-			Home_screenTest(datasets);
-			Package_history_screenTest(datasets);
+			if(isElementDispalyed) {Login_screenTest(datasets);}
+			if(isElementDispalyed) {Home_screenTest(datasets);}
+			if(isElementDispalyed) {Package_history_screenTest(datasets);}
 			tearDown();
 		}	}
 
