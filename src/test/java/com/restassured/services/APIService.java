@@ -1,30 +1,35 @@
 package com.restassured.services;
 
-import static io.restassured.RestAssured.given;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.configurations.GlobalData;
+import com.utilities.ConfigFilesUtility;
+import com.utilities.MyApp;
+import com.utilities.ReportPortalBaseClass;
+import io.restassured.response.Response;
+import io.restassured.response.ResponseBody;
+import io.restassured.specification.RequestSpecification;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import com.configurations.GlobalData;
-import com.utilities.ConfigFilesUtility;
+import static io.restassured.RestAssured.given;
 
-import io.restassured.response.Response;
-import io.restassured.response.ResponseBody;
-import io.restassured.specification.RequestSpecification;
-
-public class APIService {
-
+public class APIService extends ReportPortalBaseClass {
+	
 	private static JSONArray jsonArray;
+	private static ConfigFilesUtility configFileObj;
+
 
 	@SuppressWarnings({ "unused", "static-access" })
-	public static String callRequest(ConfigFilesUtility con, String urlParams, String headers, int requestType, int bodyType, String inputBody,
-			String datatsetHeader, String dataResources,  Logger logger) {
-
+	public static String callRequest(ConfigFilesUtility con, String apiName, String urlParams, String headers, int requestType, int bodyType, String inputBody,
+			String datatsetHeader, String dataResources, String authenticationData,String formurlEncodedData,String formData,String savedParameters, Logger logger) {
+		onlyReportPortalForDistingushApi();
+		configFileObj= new ConfigFilesUtility();
+		
+		//String authenticationData = "";
+		
 		String[] bodyTpes = new String[] { "", "form-data", "x-www-form-urlencoded", "raw" };
 		String[] types = new String[] { "", "GET", "POST", "PUT", "DELETE" };
 		String contentType = "";
@@ -32,17 +37,20 @@ public class APIService {
 		jsonArray = new JSONArray();
 	
 		try {
-			
 			//Constants.iS_WEB = false;
 			//Constants.IS_TESTCASE = false;
-			
-			
-			JSONObject jsonObject = new JSONObject(con.getProperty("PrimaryInfo"));
-		
+			String data  = con.getProperty("PrimaryInfo");
+			JSONObject jsonObject = new JSONObject(data);
 			String testCaseName = jsonObject.getString("testcase_name");
 			String projectName = jsonObject.optString("project_name");
 			String projectId = jsonObject.optString("project_id");
 			String reportsPath = "reportsPath";
+			try {
+				configFileObj.loadPropertyFile(  projectName +".properties");
+			} catch (Exception e) {
+				//e.printStackTrace();
+			}
+			
 			String returnString = jsonObject.optString("returnString");
 			String packageFolder = jsonObject.optString("moduleName");
 			String type = types[requestType];
@@ -51,21 +59,59 @@ public class APIService {
 			new GlobalData().reportData(testCaseName, jsonoBj);
 			new GlobalData().primaryInfoData(con);
 			//extentHeaderLog( datatsetHeader);
+
+			//String Url = jsonObject.optString("project_url") + dataResources;
 			
-			String Url = jsonObject.optString("project_url") + dataResources;
+			String Url = getFinalData(jsonObject.optString("project_url") + dataResources);
+			
+			reportCreation("info","API Name : " + apiName);
 			//String format = jsonObject.optString("raw_type_format");
 			reportCreation("info",Url);
 			//test.log(LogStatus.INFO, "<b style = 'background-color: #ffffff; color : #000000 ;' >" + Url + "</b>");
 			
 			RequestSpecification requestSpec = given();
 
+			if(authenticationData != null && !authenticationData.isEmpty()) {
+                JSONObject authData = new JSONObject(authenticationData);
+                String authType = authData.optString("authtype");
+                if (authType.equalsIgnoreCase("bearertoken")) {
+                    JSONObject bearerTokenObj = authData.optJSONObject("bearertoken");
+                    String token = getFinalData(bearerTokenObj.optString("token"));
+                    
+                    requestSpec.header("Authorization", "bearer " + token);
+                    reportCreation("info", "Authorization : bearer " + token);
+                } else if (authType.equalsIgnoreCase("basicauth")) {
+                    JSONObject basicauthObj = authData.optJSONObject("basicauth");
+                    String username = getFinalData(basicauthObj.optString("username"));
+                    String password = getFinalData(basicauthObj.optString("password"));
+                    
+                    reportCreation("info", "Username : " + username);
+                    reportCreation("info", "Password : "  + password);
+                    requestSpec.auth().basic(username, password);
+                } else if (authType.equalsIgnoreCase("apikey")) {
+
+                    JSONObject apiKeyObj = authData.optJSONObject("apikey");
+                    String apikey = getFinalData(apiKeyObj.optString("key"));
+                    String value = getFinalData(apiKeyObj.optString("value"));
+                   
+                    reportCreation("info", "apikey : " + apikey + "\n value : "  + value);
+                    String headerOrQuery = apiKeyObj.optString("value");
+                    if (headerOrQuery.equalsIgnoreCase("header")) {
+                        requestSpec.header(apikey, value);
+                    } else {
+                        requestSpec.queryParam(apikey, value);
+                    }
+                }
+            }
+
+			
 			JSONArray headersJsonArray = new JSONArray(headers);
 			JSONArray parameters = new JSONArray(urlParams);
 			JSONObject body = new JSONObject(inputBody);
 			int raw_id = body.optInt("raw_id");	 //content type
 			reportCreation("info","Request Type :  " + type);
 			//test.log(LogStatus.INFO, "Request Type :  " + type);
-			contentType = (raw_id == 5 ? "application/xml" : "application/json");
+			contentType = (raw_id == 5 ? "application/xml" : "application/json; charset=UTF-8");
 			reportCreation("info", "Content Type :  " + contentType);
 			//test.log(LogStatus.INFO, "Content Type :  " + contentType);
 			logger.info("Request Type :  " + type);
@@ -77,9 +123,12 @@ public class APIService {
 			
 			for (int i = 0; i < headersJsonArray.length(); i++) {
 				JSONObject headerObj = headersJsonArray.getJSONObject(i);
-				String headerkey = headerObj.getString("header_key");
-				String headerValue = headerObj.getString("header_value");
+				String headerkey = getFinalData(headerObj.getString("header_key"));
+				String headerValue = getFinalData(headerObj.getString("header_value"));
+				
+				
 				reportCreation("info", headerkey + " : "+ headerValue);
+
 				//test.log(LogStatus.INFO, headerkey + " : "+ headerValue );
 				requestSpec.header(headerkey, headerValue);
 			}
@@ -92,16 +141,16 @@ public class APIService {
 			for (int i = 0; i < parameters.length(); i++) {
 				JSONObject parametersObj = parameters.getJSONObject(i);
 				if (requestType > 1) {
-					String key = parametersObj.getString("param_key");
-					String value = parametersObj.getString("param_value");
+					String key = getFinalData(parametersObj.getString("param_key")).replaceAll("\n", "");
+					String value = getFinalData(parametersObj.getString("param_value")).replaceAll("\n", "");
 					reportCreation("info", key + " : "+ value);
 					//test.log(LogStatus.INFO, key + " : "+ value);
 					requestSpec.queryParam(key, value);
 				} else {
-					String key = parametersObj.getString("param_key").replaceAll("\n", "");
-					String value = parametersObj.getString("param_value").replaceAll("\n", "");
+					String key = getFinalData(parametersObj.getString("param_key")).replaceAll("\n", "");
+					String value = getFinalData(parametersObj.getString("param_value")).replaceAll("\n", "");
 					reportCreation("info", key + " : "+ value);
-				//test.log(LogStatus.INFO, key + " : "+ value);
+					//test.log(LogStatus.INFO, key + " : "+ value);
 					requestSpec.param(key, value);
 				}
 			}
@@ -118,26 +167,46 @@ public class APIService {
 				response = requestSpec.when().contentType(contentType).get(Url).then().extract().response();
 			} else if (requestType > 1) { // POST,PUT,DELETE
 				String rawBody = "";
+				JSONArray bodyArray = null;
 				if (bodyType == 1 || bodyType == 2) { // form-data or x-www-form-urlencoded
-					JSONArray bodyArray = body.optJSONArray(bodyTpes[bodyType]);
-					for (int i = 0; i < body.length(); i++) {
+					if(bodyType == 2) {
+					 contentType =  "application/x-www-form-urlencoded; charset=UTF-8";
+					 bodyArray = new JSONArray(formurlEncodedData);
+					 
+					 reportCreation("info", "Content-Type" + " : "+ "application/x-www-form-urlencoded; charset=UTF-8");
+				
+					}
+					if(bodyType == 1) {
+					 //requestSpec.multiPart("file", new File("/path/to/file.json"));
+					 bodyArray = body.optJSONArray(formData);
+					}
+					for (int i = 0; i < bodyArray.length(); i++) {
 						JSONObject bodyObj = bodyArray.getJSONObject(i);
-						requestSpec.formParam(bodyObj.optString("key"), bodyObj.optString("value"));
+						
+						String key = getFinalData(bodyObj.optString("key")).replaceAll("\n", "");
+						String value =getFinalData(bodyObj.optString("value")).replaceAll("\n", "");
+						reportCreation("info", key + " : " + value);
+						requestSpec.formParam(key, value);
 					}
 				} else if (bodyType == 3) { // raw data
-					rawBody = body.optString("raw_text");
+					rawBody = getFinalData(body.optString("raw_text"));
 				}
 
+				
+				requestSpec.contentType(contentType);
+				if(bodyType > 2) {
+				  requestSpec.body(rawBody);
+				}
 				if (requestType == 2) {
-					response = requestSpec.contentType(contentType).body(rawBody).when().post(Url);
+					response = requestSpec.when().post(Url);
 				} else if (requestType == 3) {
-					response = requestSpec.contentType(contentType).body(rawBody).when().put(Url);
+					response =  requestSpec.when().put(Url);
 				} else if (requestType == 4) {
-					response = requestSpec.contentType(contentType).body(rawBody).when().delete(Url);
-				}
-
+					response =  requestSpec.when().delete(Url);
+				} else if (requestType == 5) {
+					response =  requestSpec.when().patch(Url);
+				} 
 			}
-			
 			
 			extentReportLog( "Output");
 			if (response != null) {	
@@ -145,14 +214,16 @@ public class APIService {
 				ResponseBody responseBody = response.getBody();
 				int statusCode = response.getStatusCode();
 				String responseString = responseBody.asString();
-
+				
 				// Assert that correct status code is returned.
 				/*
 				 * Assert.assertEquals(statusCode actual value , 200 expected value ,
 				 * "Correct status code returned");
 				 */
 				if (statusCode == 200 || statusCode == 201) {
+					MyApp.data(projectName, responseString, savedParameters);
 					reportCreation("pass", testCaseName + " API status code is : " + statusCode);
+					reportCreation("pass", "Response: " + responseString);
 					//test.log(LogStatus.PASS, testCaseName + " API status code is : " + statusCode);
 					logger.info(testCaseName + " API status code is :" + statusCode + " : " + responseString);
 					System.out.println(responseString);
@@ -172,19 +243,15 @@ public class APIService {
 				} else {
 					
 					logger.info("Invalid response body" + responseString);
-					if(contentType.equalsIgnoreCase("application/xml") && responseString.contains("<?xml")) {
+					if(contentType.equalsIgnoreCase("application/xml")) {
 						reportCreation("fail", "Invalid response body" + responseString);
 						//test.log(LogStatus.FAIL, "Invalid response body" + responseString);
-					} else {
+					}else if (isJSONValid(responseString)) {
+						reportCreation("fail", "Invalid response body" + responseString);
+						//test.log(LogStatus.FAIL, "Invalid response body" + responseString);
+					}  else {
 						reportCreation("fail", "Response is in HTML content please check the logger file");
 						//test.log(LogStatus.FAIL, "Response is in HTML content please check the logger file");
-					}
-					if (isJSONValid(responseString)) {
-						reportCreation("fail", "Invalid response body" + responseString);
-						//test.log(LogStatus.FAIL, "Invalid response body" + responseString);
-					} else {
-						reportCreation("fail", "Invalid JSON : Response is in HTML content please check the logger file");
-						//test.log(LogStatus.FAIL, "Invalid JSON : Response is in HTML content please check the logger file");
 					}
 				}
 				System.out.println(responseString);
@@ -195,8 +262,8 @@ public class APIService {
 			String exception = e.getClass().getSimpleName() + "-" + e.getLocalizedMessage();
 			reportCreation("fail", "Invalid response : " + exception);
 			//test.log(LogStatus.FAIL, "Invalid response : " + exception);
-			logger.info("Invalid response body returned as :  " + exception);
-			e.printStackTrace();
+			//logger.info("Invalid response body returned as :  " + exception);
+			//e.printStackTrace();
 		}
 		//ExtentConfigurations.failedDataSets = ExtentConfigurations.failedDataSets + 1;
 		//Constants.testName = Constants.testName + " - FAIL $";
@@ -206,11 +273,13 @@ public class APIService {
 	
 	public static void extentReportLog(String data) {
 		reportCreation("info", data);
+		//if(LOGGER != null) LOGGER.info(data);
 		//test.log(LogStatus.INFO, "<b style = 'background-color: #ffffff; color : #1976D2 ; font-size : 15px' >"+ data + "</b>");
 	}
 	
 	public static void extentHeaderLog(String data) {
 		reportCreation("info", data);
+		//if(LOGGER != null) LOGGER.info(data);
 		//test.log(LogStatus.INFO, "<b style = 'background-color: #ffffff; color : #ff8f00 ; font-size : 18px' >"+ data + "</b>");
 	}
 
@@ -258,9 +327,39 @@ public class APIService {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("result_type", result);
 		jsonObject.put("text", data);
+		if(result.equalsIgnoreCase("fail")) {
+			if(LOGGER != null) LOGGER.error(data);
+		} else
+		if(LOGGER != null) LOGGER.info(data);
 		jsonArray.put(jsonObject);
 	}
 
+	
+	public static void onlyReportPortalForDistingushApi() {
 
+		if(LOGGER != null) LOGGER.info("\n"
+									   + "\t\t\t==========================================\n"
+										+ "\t\t\t********** Started New API **************\n"
+										+"\t\t\t==========================================\n");
+		
+	}
+
+	private static String getFinalData(String splitData) {
+		String returnData = splitData;
+		if (splitData.contains("$") && splitData.contains("#")) {
+
+			String[] data = splitData.split("\\$");
+			for (int i = 0; i < data.length; i++) {
+				if (data[i].startsWith("#") && data[i].endsWith("#")) {
+					System.out.println(data[i]);
+					String replacement = data[i].replaceAll("#", "");
+					String finalConfigData = configFileObj.getProperty(replacement);
+					returnData = returnData.replaceAll("\\$", "").replaceAll("#", "").replace(replacement,
+							finalConfigData);
+				}
+			}
+		}
+		return returnData;
+	}
 
 }

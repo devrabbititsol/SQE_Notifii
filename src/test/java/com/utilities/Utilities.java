@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
@@ -34,10 +35,12 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.winium.WiniumDriver;
 
-public class Utilities {
+
+public class Utilities extends BaseClass {
 
 	private static boolean isMobile = false;
-
+	
+	//private static final Logger LOGGER = LoggerFactory.getLogger(Utilities.class);
 	// Capture Screen Shot and save in the location
 	public static String captureScreenshot(WebDriver driver, String screenShotName) {
 		String path = "";
@@ -56,7 +59,8 @@ public class Utilities {
 			html = covertScreenshotToBase64(source , screenShotName);
 			path = System.getProperty("user.dir") + File.separator + "screenshots";
 			createDirectory(path);
-			FileUtils.copyFile(source, new File(path + File.separator  + dateFormat.format(dt) + "_" + screenShotName + ".png"));
+			File f = new File(path + File.separator  + dateFormat.format(dt) + "_" + screenShotName + ".png");
+			FileUtils.copyFile(source, f);
 			System.out.println("screenshot is taken");
 
 		} catch (Exception e) {
@@ -79,7 +83,7 @@ public class Utilities {
 			} */
 			
 			System.out.println(dateFormat.format(dt));
-			TakesScreenshot ts = (TakesScreenshot) driver;
+			TakesScreenshot ts = driver;
 			File source = ts.getScreenshotAs(OutputType.FILE);
 			html = covertScreenshotToBase64(source , screenShotName);
 			path = System.getProperty("user.dir") + File.separator + "screenshots";
@@ -102,7 +106,7 @@ public class Utilities {
 	public static String covertScreenshotToBase64(File file, String name) {
 		try {		
 		FileInputStream fis = new FileInputStream(file);
-		byte byteArray[] = new byte[(int)file.length()];
+		byte[] byteArray = new byte[(int)file.length()];
 		fis.read(byteArray);
 		String imageString = Base64.encodeBase64String(byteArray);
 		return doImageClickAnimation(imageString, name);
@@ -289,7 +293,7 @@ public class Utilities {
 			con.setDoOutput(true);
 			OutputStream os = con.getOutputStream();
 			DataOutputStream wr = new DataOutputStream(os);
-			byte[] isoString = json.getBytes("UTF-8");
+			byte[] isoString = json.getBytes(StandardCharsets.UTF_8);
 			
 			wr.write(isoString, 0, isoString.length);
 			// wr.writeBytes(json);

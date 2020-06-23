@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
@@ -23,8 +24,8 @@ import com.utilities.Utilities;
 @SuppressWarnings("unused")
 public class DesktopAutomationReportUpload extends BaseClass {
 	String primaryInfo = "";
-	private String projectPath = System.getProperty("user.dir");
-	private String reportsPath = projectPath + File.separator + "DesktopReports" + File.separator + "DesktopAutomationReport.txt";	
+	private final String projectPath = System.getProperty("user.dir");
+	private final String reportsPath = projectPath + File.separator + "DesktopReports" + File.separator + "DesktopAutomationReport.txt";
 	private String resultCount;
 	private String datasetResult;
 	private String reportstatus;
@@ -39,7 +40,7 @@ public class DesktopAutomationReportUpload extends BaseClass {
 	 * @moduleDescription
 	 */
 	private void writeFile(String str, String className, String filePath, String fileExtension) throws Exception {
-		Writer out = new java.io.BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath + File.separator + className + fileExtension), "UTF-8"));
+		Writer out = new java.io.BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath + File.separator + className + fileExtension), StandardCharsets.UTF_8));
 		try {
 			out.write(str);
 			out.flush();

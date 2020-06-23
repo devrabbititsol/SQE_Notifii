@@ -1,26 +1,25 @@
 package com.utilities;
 
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.KeyEvent;
-import java.io.File;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.configurations.GlobalData;
+import com.epam.reportportal.service.ReportPortal;
+import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
+import com.google.common.collect.ImmutableMap;
+import com.saucelabs.common.SauceOnDemandAuthentication;
+import com.saucelabs.saucerest.SauceREST;
+import groovy.json.StringEscapeUtils;
+import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.ios.IOSDriver;
+import io.appium.java_client.remote.AndroidMobileCapabilityType;
+import io.appium.java_client.remote.AutomationName;
+import io.appium.java_client.remote.MobileCapabilityType;
+import io.appium.java_client.service.local.AppiumDriverLocalService;
+import io.appium.java_client.service.local.AppiumServiceBuilder;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxBinary;
@@ -37,40 +36,41 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.winium.DesktopOptions;
 import org.openqa.selenium.winium.WiniumDriver;
+import org.testng.Assert;
 import org.testng.IRetryAnalyzer;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 
-import com.configurations.GlobalData;
-import com.google.common.collect.ImmutableMap;
-import com.relevantcodes.extentreports.ExtentReports;
-import com.relevantcodes.extentreports.ExtentTest;
-import com.relevantcodes.extentreports.LogStatus;
-import com.saucelabs.common.SauceOnDemandAuthentication;
-import com.saucelabs.saucerest.SauceREST;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.List;
+import java.util.*;
 
-import groovy.json.StringEscapeUtils;
-import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.ios.IOSDriver;
-import io.appium.java_client.remote.AndroidMobileCapabilityType;
-import io.appium.java_client.remote.AutomationName;
-import io.appium.java_client.remote.MobileCapabilityType;
-import io.appium.java_client.service.local.AppiumDriverLocalService;
-import io.appium.java_client.service.local.AppiumServiceBuilder;
+import static rp.com.google.common.base.Throwables.getStackTraceAsString;
 
-public class BaseClass {
+
+public class BaseClass extends ReportPortalBaseClass {
 	public WebDriver driver;
 	public WiniumDriver winiumDriver;
 	private static boolean isElementDispalyed;
-	private String driversPath = System.getProperty("user.dir") + File.separator + "Resources" + File.separator;
+	private String driversPath = System.getProperty("user.dir") + File.separator + "resources" + File.separator;
 	private String chromeDriverPath = driversPath + "chromedriver.exe";
 	private String geckoFireFoxDriverPath = driversPath + "geckodriver.exe";
 	private String iEDriverPath = driversPath + "IEDriverServer.exe";
 	public AppiumDriver<WebElement> appiumDriver;
 	public String text = "";
-	
+	public String authenticationData = "";
+	public String formurlEncodedData = "";
+	public String formData = "";
+	public String linkParams = "[]";
+	//public static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(BaseClass.class);
+
 	// Explicit wait method
 	public static WebElement waitForExpectedElement(WebDriver driver, final By locator, int time) {
 		WebDriverWait wait = new WebDriverWait(driver, time);
@@ -83,31 +83,31 @@ public class BaseClass {
 		} catch (Exception e) {
 			System.out.println("");
 		}
-		
+
 		//Actions action = new Actions(driver);
 		//action.moveToElement(element).perform();
 		//isElementDispalyed = element.isDisplayed();
 		initialInputDataClear(element); // if any text in input it will clear
 		WebDriverWait wait = new WebDriverWait(driver, 20);
 		return wait.until(ExpectedConditions.visibilityOf(element));
-	
+
 	}
 
 	public static String initialInputDataClear(WebElement webElement) {
 		String str = webElement.toString();
 		try {
 			if (str != null && str.toUpperCase().contains("INPUT")) {
-			String[] listString = null;
-			if (str.contains("xpath")) {
-				listString = str.split("xpath:");
-			} else if (str.contains("id")) {
-				listString = str.split("id:");
-			}
-			String last = listString[1].trim();
-			String xpath = last.substring(0, last.length() - 1);
-			if (xpath != null && str.toUpperCase().contains("INPUT")) {
-				webElement.clear();
-			}
+				String[] listString = null;
+				if (str.contains("xpath")) {
+					listString = str.split("xpath:");
+				} else if (str.contains("id")) {
+					listString = str.split("id:");
+				}
+				String last = listString[1].trim();
+				String xpath = last.substring(0, last.length() - 1);
+				if (xpath != null && str.toUpperCase().contains("INPUT")) {
+					webElement.clear();
+				}
 			}
 		} catch (Exception e) {
 			//System.out.println("Not editable input");
@@ -175,18 +175,18 @@ public class BaseClass {
 			}
 		});
 	}
-	
+
 	/**
 	 * Driver instance for Desktop Applications
-	 * 
+	 *
 	 * @param applicationexePath
 	 * @param remoteWiniumDriverPath
 	 * @return
 	 * @throws Exception
 	 */
 	public WiniumDriver launchDesktopApp(String applicationexePath, String remoteWiniumDriverPath) throws Exception {
-		DesktopOptions options = new DesktopOptions(); 
-		options.setApplicationPath(applicationexePath); 
+		DesktopOptions options = new DesktopOptions();
+		options.setApplicationPath(applicationexePath);
 		winiumDriver = new WiniumDriver(new URL(remoteWiniumDriverPath), options);
 		return winiumDriver;
 	}
@@ -194,7 +194,7 @@ public class BaseClass {
 	// ============================================= APPIUM SETUP ==============================================//
 	/**
 	 * Configuring the node and appium path
-	 * 
+	 *
 	 * @return
 	 */
 	private String nodeJSPath = System.getenv("NODE_PATH");
@@ -216,7 +216,7 @@ public class BaseClass {
 
 	/**
 	 * Used to start Appium Server
-	 * 
+	 *
 	 * @return boolean appium is started or not
 	 */
 	private boolean startAppiumServer() {
@@ -238,8 +238,8 @@ public class BaseClass {
 			System.out.println(" Stopped Appium Server");
 		}
 	}
-		
-	
+
+
 	private void getDriversPath() {
 		if (!isWindows()) {
 			if (isSolaris() || isUnix()) {
@@ -250,105 +250,105 @@ public class BaseClass {
 				geckoFireFoxDriverPath = geckoFireFoxDriverPath.replace("geckodriver.exe", "macGeckodriver");
 			}
 		}
-		
+
 	}
 	@SuppressWarnings("deprecation")
 	public WebDriver launchBrowser(String browserName, ConfigFilesUtility configFileObj) {
 		getDriversPath();
 		GlobalData.primaryInfoData(configFileObj);
-			if (browserName.equalsIgnoreCase("chrome")) {
-				System.setProperty("webdriver.chrome.driver", chromeDriverPath);
-				
-				ChromeOptions options = new ChromeOptions();
-				Map<String, Object> prefs=new HashMap<String,Object>();
-				//1-Allow, 2-Block, 0-default
-				prefs.put("profile.default_content_setting_values.notifications", 1);
-				options.setExperimentalOption("prefs",prefs);
-				
-				if (isSolaris() || isUnix()) {
-					
-					options.addArguments("start-maximized"); // open Browser in maximized mode
-					options.addArguments("disable-infobars"); // disabling infobars
-					options.addArguments("--disable-extensions"); // disabling extensions
-					options.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
-					options.addArguments("--no-sandbox"); // Bypass OS security model
-					options.addArguments("--headless"); // this line makes run in linux environment with jenkins
-					driver = new ChromeDriver(options);
-				} else {
-					driver = new ChromeDriver(options);
-				}
-	
-				System.out.println("Chrome Browser is Launched");
-			} else if (browserName.equalsIgnoreCase("mozilla")) {
-				System.setProperty("webdriver.gecko.driver", geckoFireFoxDriverPath);
-				DesiredCapabilities capabilities = DesiredCapabilities.firefox();
-	//			FirefoxProfile profile = new FirefoxProfile();
-	//			//1-Allow, 2-Block, 0-default
-	//			profile.setPreference("permissions.default.desktop-notification", 1);
-	//			capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-				
-				if (isSolaris() || isUnix()) {
-					FirefoxBinary binary = new FirefoxBinary();
-					
-					capabilities.setCapability("marionette", true);
-					FirefoxOptions firefoxOptions = new FirefoxOptions(capabilities);
-					firefoxOptions.setBinary(binary);
-				
-					firefoxOptions.addArguments("--no-sandbox"); // Bypass OS security model
-					firefoxOptions.addArguments("--headless"); 
-					driver = new FirefoxDriver(firefoxOptions);
-				} else {
-					FirefoxOptions firefoxOptions = new FirefoxOptions(capabilities);
-					driver = new FirefoxDriver(firefoxOptions);
-				//	driver.manage().window().setPosition(new Point(-2000, 0));
-				}
-				
-				System.out.println("FireFox Browser is Launched");
-			} else if (browserName.equalsIgnoreCase("safari")) {
-				// Note : Should AllowRemoteAutomation in safari browser DeveloperMenu
-				// Directions -- > launchSafariBrowser --> Preferences --> Advanced Tab -->
-				// Show Developer Menu --> Click on DevloperMenu --> Enable
-				// AllowRemoteAutomation
-				// System.setProperty("webdriver.safari.noinstall", "true");
-				driver = new SafariDriver();
-				//driver.get("http://www.google.com");
-				System.out.println("Safari Browser is Launched");
-			} else if (browserName.equalsIgnoreCase("ie")) {
-				// To run Internet explorer you should enable below configuration in IE
-				// Internet Explorer -> Settings -> Security tab -> Enable Protected mode in all zones 
-				
-				if (!isWindows()) {
-					System.out.println("IE Browser not supported for this OS.");
-					return null;
-				}
-				DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
-				capabilities.setCapability(InternetExplorerDriver.INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS, true);
-				System.setProperty("webdriver.ie.driver", iEDriverPath);
-				driver = new InternetExplorerDriver(capabilities);
-				System.out.println("IE Browser is Launched");
+		if (browserName.equalsIgnoreCase("chrome")) {
+			System.setProperty("webdriver.chrome.driver", chromeDriverPath);
+
+			ChromeOptions options = new ChromeOptions();
+			Map<String, Object> prefs=new HashMap<String,Object>();
+			//1-Allow, 2-Block, 0-default
+			prefs.put("profile.default_content_setting_values.notifications", 1);
+			options.setExperimentalOption("prefs",prefs);
+
+			if (isSolaris() || isUnix()) {
+
+				options.addArguments("start-maximized"); // open Browser in maximized mode
+				options.addArguments("disable-infobars"); // disabling infobars
+				options.addArguments("--disable-extensions"); // disabling extensions
+				options.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+				options.addArguments("--no-sandbox"); // Bypass OS security model
+				options.addArguments("--headless"); // this line makes run in linux environment with jenkins
+				driver = new ChromeDriver(options);
+			} else {
+				driver = new ChromeDriver(options);
 			}
 			
-			driver.get(configFileObj.getProperty("URL"));
+			System.out.println("Chrome Browser is Launched");
+		} else if (browserName.equalsIgnoreCase("mozilla")) {
+			System.setProperty("webdriver.gecko.driver", geckoFireFoxDriverPath);
+			DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+			//			FirefoxProfile profile = new FirefoxProfile();
+			//			//1-Allow, 2-Block, 0-default
+			//			profile.setPreference("permissions.default.desktop-notification", 1);
+			//			capabilities.setCapability(FirefoxDriver.PROFILE, profile);
+
 			if (isSolaris() || isUnix()) {
-				Dimension d = new Dimension(1382, 744);
-				// Resize the current window to the given dimension
-				driver.manage().window().setSize(d);
+				FirefoxBinary binary = new FirefoxBinary();
+
+				capabilities.setCapability("marionette", true);
+				FirefoxOptions firefoxOptions = new FirefoxOptions(capabilities);
+				firefoxOptions.setBinary(binary);
+
+				firefoxOptions.addArguments("--no-sandbox"); // Bypass OS security model
+				firefoxOptions.addArguments("--headless");
+				driver = new FirefoxDriver(firefoxOptions);
 			} else {
-				java.awt.Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-				int screenHeight = screenSize.height;
-				int screenWidth = screenSize.width;
-	
-				Dimension d = new Dimension(screenWidth, screenHeight);
-				// Resize the current window to the given dimension
-				driver.manage().window().setSize(d);
-				//driver.manage().window().setPosition(new Point(-2000, 0));
+				FirefoxOptions firefoxOptions = new FirefoxOptions(capabilities);
+				driver = new FirefoxDriver(firefoxOptions);
+				//	driver.manage().window().setPosition(new Point(-2000, 0));
 			}
-		
+
+			System.out.println("FireFox Browser is Launched");
+		} else if (browserName.equalsIgnoreCase("safari")) {
+			// Note : Should AllowRemoteAutomation in safari browser DeveloperMenu
+			// Directions -- > launchSafariBrowser --> Preferences --> Advanced Tab -->
+			// Show Developer Menu --> Click on DevloperMenu --> Enable
+			// AllowRemoteAutomation
+			// System.setProperty("webdriver.safari.noinstall", "true");
+			driver = new SafariDriver();
+			//driver.get("http://www.google.com");
+			System.out.println("Safari Browser is Launched");
+		} else if (browserName.equalsIgnoreCase("ie")) {
+			// To run Internet explorer you should enable below configuration in IE
+			// Internet Explorer -> Settings -> Security tab -> Enable Protected mode in all zones
+
+			if (!isWindows()) {
+				System.out.println("IE Browser not supported for this OS.");
+				return null;
+			}
+			DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
+			capabilities.setCapability(InternetExplorerDriver.INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS, true);
+			System.setProperty("webdriver.ie.driver", iEDriverPath);
+			driver = new InternetExplorerDriver(capabilities);
+			System.out.println("IE Browser is Launched");
+		}
+
+		driver.get(configFileObj.getProperty("URL"));
+		if (isSolaris() || isUnix()) {
+			Dimension d = new Dimension(1382, 744);
+			// Resize the current window to the given dimension
+			driver.manage().window().setSize(d);
+		} else {
+			java.awt.Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+			int screenHeight = screenSize.height;
+			int screenWidth = screenSize.width;
+
+			Dimension d = new Dimension(screenWidth, screenHeight);
+			// Resize the current window to the given dimension
+			driver.manage().window().setSize(d);
+			//driver.manage().window().setPosition(new Point(-2000, 0));
+		}
+
 		return driver;
 	}
-	
-	
-	
+
+
+
 
 	private String OS = System.getProperty("os.name").toLowerCase();
 
@@ -370,7 +370,7 @@ public class BaseClass {
 
 
 	// =================================================New style Reports========================================================
-	
+
 	//===================== For Report ========================
 	JSONArray jsonArray;
 
@@ -393,17 +393,27 @@ public class BaseClass {
 		} else {
 			finalURL = "winium";
 		}
+
+
 		JSONObject jsonoBj = new JSONObject();
 		jsonArray = new JSONArray();
 		jsonoBj.put("browser_type",finalURL);
 		jsonoBj.put("testcase_name",tescaseName);
 		jsonoBj.put("datasets", jsonArray);
 		GlobalData.reportData(tescaseName, jsonoBj);
+
+		if(deviceNameReport != null) {
+			reportCreation("info", "Device Name : " + deviceNameReport);
+			reportCreation("info", "Platform Name : " + platformNameReport);
+			reportCreation("info", "Platform Version : " + platformVersionReport);
+			reportCreation("info", "Browser Name : " + browserNameReport);
+			reportCreation("info", "Execution Mode : " + executionEnvironmentReport);
+		}
 		// testcaseObj.put(tescaseName, jsonArray);
 	}
-	
-	
-	
+
+
+
 
 	public void testLogHeader(String data) {
 		reportHeadersCreation("info", data);
@@ -422,7 +432,7 @@ public class BaseClass {
 				robot.keyPress(KeyEvent.VK_ENTER);
 				robot.keyRelease(KeyEvent.VK_ENTER);
 				robot.delay(200);
-				}
+			}
 			if (data.contains("8142243634") || data.contains("9332") || data.contains("Ranga Swamy")) {
 
 				Robot robot = new Robot();
@@ -459,7 +469,9 @@ public class BaseClass {
 			} else {
 				name = data.toString().substring(0, 10);
 			}
-			reportFailureCreation("fail", StringEscapeUtils.escapeJava(data),Utilities.captureScreenshot(driver, name));
+			String base64Data =Utilities.captureScreenshot(driver, name);
+			if(LOGGER != null) LOGGER.error("RP_MESSAGE#BASE64#{}#{}",base64Data,data);
+			reportFailureCreation("fail", StringEscapeUtils.escapeJava(data),base64Data);
 		}
 		if (logger != null)
 			logger.error(data);
@@ -475,16 +487,39 @@ public class BaseClass {
 		} else {
 			name = data.toString().substring(0, 10);
 		}
-		reportFailureCreation("fail", StringEscapeUtils.escapeJava(data), Utilities.captureScreenshot(driver, name));
+		String base64Data =Utilities.captureScreenshot(driver, name);
+		if(LOGGER != null) LOGGER.error("RP_MESSAGE#BASE64#{}#{}",base64Data,data);
+		reportFailureCreation("fail", StringEscapeUtils.escapeJava(data),base64Data);
 	}
 
-	/***
-	 * Fail status for Desktop Application Reoport
-	 * 
-	 * @param test
-	 * @param logger
-	 * @param data
-	 */
+
+	public static void sendStackTraceToRP(final Throwable cause) {
+
+		ReportPortal.emitLog((rp.com.google.common.base.Function<String, SaveLogRQ>) itemId -> {
+			SaveLogRQ rq = new SaveLogRQ();
+			System.out.println("================="+itemId);
+			rq.setTestItemId(itemId);
+			rq.setLevel("ERROR");
+			rq.setLogTime(Calendar.getInstance().getTime());
+			if (cause != null) {
+
+				rq.setMessage(getStackTraceAsString(cause));
+			} else {
+				rq.setMessage("Test has failed without exception");
+			}
+
+
+			rq.setLogTime(Calendar.getInstance().getTime());
+			return rq;
+		});
+	}
+
+		/***
+         * Fail status for Desktop Application Reoport
+         *
+         * @param logger
+         * @param data
+         */
 
 	public void printFailureLogAndReportDesktop(Logger logger, String data) {
 		if (logger != null)
@@ -496,30 +531,37 @@ public class BaseClass {
 		} else {
 			name = data.toString().substring(0, 10);
 		}
+		String base64Data =Utilities.captureScreenshot(driver, name);
+	//	if(LOGGER != null) LOGGER.info(data);
+		if(LOGGER != null) LOGGER.error("RP_MESSAGE#BASE64#{}#{}",base64Data,data);
 		reportFailureCreation("fail", StringEscapeUtils.escapeJava(data),Utilities.captureScreenshotDesktopApplication(winiumDriver, name));
 
+		Assert.assertTrue(false);
 	}
 
 	public void printInfoLogAndReport(Logger logger, String data) {
 		logger.info(data);
 		reportCreation("info", data);
+		//if(LOGGER != null) LOGGER.info(data);
 		//GlobalData.primaryInfoData(conObj);
 	}
 
-	
+
 	public void reportHeadersCreation(String result, String data) {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("result_type", "screen");
 		jsonObject.put("text", data);
 		jsonArray.put(jsonObject);
+		if(LOGGER != null) LOGGER.info(data);
 		//GlobalData.primaryInfoData(conObj);
 	}
-	
-	
+
+
 	public void reportCreation(String result, String data) {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("result_type", result);
 		jsonObject.put("text", data);
+		if(LOGGER != null) LOGGER.info(data);
 		jsonArray.put(jsonObject);
 		//GlobalData.primaryInfoData(conObj);
 	}
@@ -528,15 +570,14 @@ public class BaseClass {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("result_type", result);
 		jsonObject.put("text", data);
+		//if(LOGGER != null) LOGGER.info(data);
 		jsonObject.put("screenshot", image);
 		jsonArray.put(jsonObject);
 	}
-	
+
 	//============= End Report ===============
-	
-	public void tearDown(ExtentReports reports, ExtentTest test) throws Exception {
-		reports.endTest(test);
-		reports.flush();
+
+	public void tearDown() throws Exception {
 		driver.quit();
 	}
 
@@ -545,7 +586,7 @@ public class BaseClass {
 
 		Actions action = new Actions(webDriver);
 		action.moveToElement(element).build().perform();
-		
+
 		// action.moveToElement(we).moveToElement(driver.findElement(By.xpath(elementClickXpath))).click().build().perform();
 	}
 
@@ -568,30 +609,31 @@ public class BaseClass {
 
 	// upload a file
 	public void uploadFile(String path, String xpath) {
-		/*try {	
-			WebElement element = waitForExpectedElement(driver,By.xpath(xpath));	
+		/*try {
+			WebElement element = waitForExpectedElement(driver,By.xpath(xpath));
 			element.sendKeys(name);
 		} catch (Exception e) {
 			e.getMessage();
 		}*/
-		
+
 		try {
-	        //Setting clipboard with file location
+			//Setting clipboard with file location
 			StringSelection selection = new StringSelection(path);
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(selection, selection);
-	        //native key strokes for CTRL, V and ENTER keys
-	        Robot robot = new Robot();
+			//native key strokes for CTRL, V and ENTER keys
+			Robot robot = new Robot();
 
-	        robot.keyPress(KeyEvent.VK_CONTROL);
-	        robot.keyPress(KeyEvent.VK_V);
-	        robot.keyRelease(KeyEvent.VK_V);
-	        robot.keyRelease(KeyEvent.VK_CONTROL);
-	        robot.keyPress(KeyEvent.VK_ENTER);
-	        robot.keyRelease(KeyEvent.VK_ENTER);
-	    } catch (Exception exp) {
-	        exp.printStackTrace();
-	    }
+			robot.keyPress(KeyEvent.VK_CONTROL);
+			robot.keyPress(KeyEvent.VK_V);
+			robot.keyRelease(KeyEvent.VK_V);
+			robot.keyRelease(KeyEvent.VK_CONTROL);
+			robot.keyPress(KeyEvent.VK_ENTER);
+			robot.keyRelease(KeyEvent.VK_ENTER);
+		} catch (Exception exp) {
+			//
+			// exp.printStackTrace();
+		}
 	}
 
 	// Dropdown
@@ -602,9 +644,9 @@ public class BaseClass {
 		option.getText();
 		return "";
 	}
-	
+
 	//handle table validations
-	public String tableDataHandle(ExtentTest test,String xpath) {
+	public String tableDataHandle(String xpath) {
 		List<WebElement> rows;
 		if(xpath.startsWith("/")) {
 			waitForExpectedElement(driver, By.xpath(xpath));
@@ -617,19 +659,20 @@ public class BaseClass {
 		}
 		//List<WebElement> rows = element.findElements(By.xpath(trXpath));
 		//Print data from each row
-		test.log(LogStatus.INFO, "Number of rows : " + rows.size());
+		reportCreation("info", "Number of rows : " + rows.size());
+		
 		for (WebElement row : rows) {
-			  System.out.print(row + "\t");
-		    List<WebElement> cols = row.findElements(By.tagName("td"));
-		    for (WebElement col : cols) {
-		        System.out.print(col.getText() + "\t");
-		    }
-		    System.out.println();
+			System.out.print(row + "\t");
+			List<WebElement> cols = row.findElements(By.tagName("td"));
+			for (WebElement col : cols) {
+				System.out.print(col.getText() + "\t");
+			}
+			System.out.println();
 		}
 		return "" + rows.size();
 
 	}
-	
+
 	// Switching to iframe by position
 	public void switchToIframe(String xpath) {
 		try {
@@ -639,9 +682,9 @@ public class BaseClass {
 					driver.switchTo().frame(framePosition);
 					WebElement ele;
 					if(xpath.startsWith("/")) {
-					 ele = driver.findElement(By.xpath(xpath));
+						ele = driver.findElement(By.xpath(xpath));
 					} else {
-					 ele = driver.findElement(By.cssSelector(xpath));
+						ele = driver.findElement(By.cssSelector(xpath));
 					}
 					if (ele.isDisplayed()) {
 						//driver.switchTo().frame(framePosition);
@@ -656,8 +699,8 @@ public class BaseClass {
 			driver.switchTo().parentFrame();
 		}
 	}
-	
-	
+
+
 	public void alertHandle(boolean isAlertAccept) {
 		try {
 			Alert alert = driver.switchTo().alert();
@@ -673,37 +716,37 @@ public class BaseClass {
 
 		}
 	}
-	
-	
+
+
 	public boolean isElementPresent(WebElement e) {
-	    try {
-	        boolean isDisplayed = e.isDisplayed();
-	        isElementDispalyed = isDisplayed;
-	    } catch (Exception exception) {
-	        isElementDispalyed = false;      
-	    }
-	    return isElementDispalyed;
+		try {
+			boolean isDisplayed = e.isDisplayed();
+			isElementDispalyed = isDisplayed;
+		} catch (Exception exception) {
+			isElementDispalyed = false;
+		}
+		return isElementDispalyed;
 	}
-	
+
 	public boolean skipifElementisNotDisplayed() {
 		return isElementDispalyed;
 	}
-	
-	
-	
+
+
+
 	/**
 	 * DataProvider that explicitly sets the browser combinations to be used.
 	 *
 	 * @param testMethod
 	 * @return Two dimensional array of objects with browser, version, and platform
 	 *         information
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@DataProvider(name = "capabilities", parallel = false)
 	public  Object[][] sauceBrowserDataProvider(Method testMethod) throws Exception {
 		return Utilities.sauceDevicesList();
 	}
-	
+
 	String device;
 	private String username;
 	private String accesskey;
@@ -712,23 +755,28 @@ public class BaseClass {
 	private ThreadLocal<AppiumDriver> driverThread;
 	private String id;
 	private boolean isSauce = false;
+	private String executionEnvironmentReport;
+	private String platformNameReport;
+	private String deviceNameReport;
+	private String platformVersionReport;
+	private String browserNameReport;
 	@SuppressWarnings({ "unchecked", "rawtypes"})
 	protected AppiumDriver<WebElement> createDriver(
-			  String deviceName,
-	            String platformName,
-	            String platformVersion,
-	            String appiumVersion,
-	            String deviceOrientation,
-	            String projectName,
-	            String testObjectApiKey,
-	            String className,
-	            String app,
-	            ConfigFilesUtility configFileObj)
-	            throws Exception {
+			String deviceName,
+			String platformName,
+			String platformVersion,
+			String appiumVersion,
+			String deviceOrientation,
+			String projectName,
+			String testObjectApiKey,
+			String className,
+			String app,
+			ConfigFilesUtility configFileObj)
+			throws Exception {
 		getDriversPath();
 		device = deviceName;
 		GlobalData.primaryInfoData(configFileObj);
-		
+
 	/*	if(true) {
 			DesiredCapabilities capabilities = new DesiredCapabilities();
 			capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS");
@@ -746,130 +794,168 @@ public class BaseClass {
 					capabilities);
 			appiumDriver.get(configFileObj.getProperty("URL"));
 			appiumDriver.get("http://www.google.com");
-			
+
 		} else */{
 
-		ConfigFilesUtility confObj = new ConfigFilesUtility();
-		DesiredCapabilities capabilities = new DesiredCapabilities();
-		
-		capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, platformVersion);
-		capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, deviceName);
-		
-		if (configFileObj.getProperty("mobilePlatform").equalsIgnoreCase("iOS")) {
-			capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Safari");
-			capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS");
-			capabilities.setCapability("wdaStartupRetries", "3");
-			//capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest");
-			capabilities.setCapability("automationName", "XCUITest");
-			capabilities.setCapability("startIWDP", true);
-		} else {
-			capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, platformName);
-			capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Chrome");
-			//capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "uiautomator2");
-		}
-		capabilities.setCapability(MobileCapabilityType.NO_RESET, false);
-		capabilities.setCapability(MobileCapabilityType.NEW_COMMAND_TIMEOUT, 60 * 10);
 
-		if (configFileObj.getProperty("executionEnvironment").equals("local")) {
-			
-			
-			isSauce = false;
-			try {
-				if (configFileObj.getProperty("mobilePlatform").equalsIgnoreCase("Android")) {
-				capabilities.setCapability("chromedriverExecutable", chromeDriverPath);
-				capabilities.setCapability("appium:chromeOptions", ImmutableMap.of("w3c", false));
+
+			ConfigFilesUtility confObj = new ConfigFilesUtility();
+			DesiredCapabilities capabilities = new DesiredCapabilities();
+
+			capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, platformVersion);
+			capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, deviceName);
+
+			if (configFileObj.getProperty("mobilePlatform").equalsIgnoreCase("iOS")) {
+				deviceNameReport = deviceName;
+				platformNameReport = "iOS";
+				platformVersionReport = platformVersion;
+				browserNameReport = "Safari";
+				capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Safari");
+				capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS");
+				capabilities.setCapability("wdaStartupRetries", 3);
+				capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest");
+				//capabilities.setCapability(MobileCapabilityType.BROWSER_VERSION, "13");
+				capabilities.setCapability("startIWDP", true);
+			} else {
+				deviceNameReport = deviceName;
+				platformNameReport = "Android";
+				platformVersionReport = platformVersion;
+				browserNameReport = "Chrome";
+				capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, platformName);
+				capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Chrome");
+				//capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "uiautomator2");
+			}
+			capabilities.setCapability(MobileCapabilityType.NO_RESET, false);
+			capabilities.setCapability(MobileCapabilityType.NEW_COMMAND_TIMEOUT, 60 * 10);
+
+			if (configFileObj.getProperty("executionEnvironment").equals("local")) {
+
+				executionEnvironmentReport = "Local";
+				isSauce = false;
+				try {
+					if (configFileObj.getProperty("mobilePlatform").equalsIgnoreCase("Android")) {
+						capabilities.setCapability("chromedriverExecutable", chromeDriverPath.replaceAll(".exe", "old.exe"));
+						capabilities.setCapability("appium:chromeOptions", ImmutableMap.of("w3c", false));
+					}
+					confObj.loadPropertyFile("DeviceCapabilities.properties");
+					capabilities.setCapability(MobileCapabilityType.UDID, confObj.getProperty("udid"));
+
+					appiumDriverService = setUpAppiumDriver(confObj);
+					startAppiumServer();
+					appiumDriver = new AppiumDriver<WebElement>(new URL(appiumDriverService.getUrl().toString()),
+							capabilities);
+					appiumDriver.get(configFileObj.getProperty("URL"));
+					//appiumDriver.get("http://appiumpro.com/contact");
+				} catch (Exception e) {
+					//e.printStackTrace();
 				}
-				confObj.loadPropertyFile("DeviceCapabilities.properties");
-				capabilities.setCapability(MobileCapabilityType.UDID, confObj.getProperty("udid"));
-				
-				appiumDriverService = setUpAppiumDriver(confObj);
-				startAppiumServer();
-				appiumDriver = new AppiumDriver<WebElement>(new URL(appiumDriverService.getUrl().toString()),
-						capabilities);
+			} else {
+				isSauce = true;
+
+				capabilities.setCapability("deviceOrientation", deviceOrientation);
+				capabilities.setCapability("name", className);
+				capabilities.setCapability("testobject_session_creation_timeout", "200000");
+				capabilities.setCapability("unicodeKeyboard", false);
+				capabilities.setCapability("resetKeyboard", false);
+				capabilities.setCapability(AndroidMobileCapabilityType.AUTO_GRANT_PERMISSIONS, true);
+				capabilities.setCapability("autoAcceptAlerts", true);
+				capabilities.setCapability("testobject_test_name ", "Default Appium Test");
+				capabilities.setCapability("testobject_suite_name ", "Default Appium Suite");
+				String executionDevicePlatform = configFileObj.getProperty("executionEnvironment");
+				if (executionDevicePlatform.equalsIgnoreCase("saucelabdevice")) {
+					executionEnvironmentReport = "SauceLabs - RealDevice";
+				/*MutableCapabilities sauceOptions = new MutableCapabilities();
+				SafariOptions browserOptions = new SafariOptions();
+				//browserOptions.setCapability("platformName", "macOS 10.13");
+				browserOptions.setCapability("browserVersion", "13.0");
+				browserOptions.setCapability("sauce:options", sauceOptions);*/
+					capabilities.setCapability("testobject_api_key", testObjectApiKey);
+					capabilities.setCapability("testobject_app_id", "1");
+					//capabilities.setCapability("fullContextList", true);
+					//capabilities.setCapability("includeSafariInWebviews", true);
+					//capabilities.setCapability("startIWDP", true);
+					//cap.setCapability("startIWDP",true);
+					//capabilities.setCapability("autoWebview", true);
+					//capabilities.setCapability("appiumVersion ", "1.15.1");
+					sauceUrl = app;
+				} else {
+					// capabilities.setCapability(MobileCapabilityType.APP, app);
+					// capabilities.setCapability(MobileCapabilityType.APPIUM_VERSION,appiumVersion);
+					executionEnvironmentReport = "SauceLabs - VirtualDevice";
+					confObj.loadPropertyFile("SauceDeviceCapabilities.properties");
+					capabilities.setCapability("build", projectName);
+					String seleniumURI = "@ondemand.saucelabs.com:443";
+					username = confObj.getProperty("userName");
+					accesskey = confObj.getProperty("accessKey");
+					SauceOnDemandAuthentication authentication = new SauceOnDemandAuthentication(username, accesskey);
+					sauceUrl = "https://" + authentication.getUsername() + ":" + authentication.getAccessKey() + seleniumURI + "/wd/hub";
+				}
+
+				/**
+				 * ThreadLocal variable which contains the {@link AndroidDriver} instance which
+				 * is used to perform browser interactions with.
+				 */
+				driverThread = new ThreadLocal<AppiumDriver>();
+
+				/**
+				 * ThreadLocal variable which contains the Sauce Job Id.
+				 */
+				ThreadLocal<String> sessionId = new ThreadLocal<String>();
+
+				if (platformName.equalsIgnoreCase("Android")) {
+					capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, AutomationName.ANDROID_UIAUTOMATOR2);
+					// Launch remote browser and set it as the current thread
+					driverThread.set(new AndroidDriver(new URL(sauceUrl), capabilities));
+				} else {
+					capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, AutomationName.IOS_XCUI_TEST);
+					driverThread.set(new IOSDriver(new URL(sauceUrl), capabilities));
+				}
+				id = ((RemoteWebDriver) driverThread.get()).getSessionId().toString();
+				sessionId.set(id);
+				appiumDriver = driverThread.get();
+				String webContext = getFirstNonNativeContextHandle(appiumDriver);
+				appiumDriver.context(webContext);
 				appiumDriver.get(configFileObj.getProperty("URL"));
-				//appiumDriver.get("http://appiumpro.com/contact");
-			} catch (Exception e) {
-				e.printStackTrace();
+				//appiumDriver.navigate().to("http://appiumpro.com/contact");
 			}
-		} else {
-			isSauce = true;
-			capabilities.setCapability("deviceOrientation", deviceOrientation);
-			capabilities.setCapability("name", className);
-			capabilities.setCapability("testobject_session_creation_timeout", "900000");
-			capabilities.setCapability("unicodeKeyboard", false);
-			capabilities.setCapability("resetKeyboard", false);
-			capabilities.setCapability(AndroidMobileCapabilityType.AUTO_GRANT_PERMISSIONS, true);
-			capabilities.setCapability("autoAcceptAlerts", true);
-			capabilities.setCapability("testobject_test_name ", "Default Appium Test");
-			capabilities.setCapability("testobject_suite_name ", "Default Appium Suite");
-			String executionDevicePlatform = configFileObj.getProperty("executionEnvironment");
-			if (executionDevicePlatform.equalsIgnoreCase("saucelabdevice")) {
-				capabilities.setCapability("testobject_api_key", testObjectApiKey);
-				capabilities.setCapability("testobject_app_id", "1");
-				//capabilities.setCapability("appiumVersion ", "1.15.1");
-				sauceUrl = app;
-			} else {
-				// capabilities.setCapability(MobileCapabilityType.APP, app);
-				// capabilities.setCapability(MobileCapabilityType.APPIUM_VERSION,appiumVersion);
-				confObj.loadPropertyFile("SauceDeviceCapabilities.properties");
-				capabilities.setCapability("build", projectName);
-				String seleniumURI = "@ondemand.saucelabs.com:443";
-				username = confObj.getProperty("userName");
-				accesskey = confObj.getProperty("accessKey");
-				SauceOnDemandAuthentication authentication = new SauceOnDemandAuthentication(username, accesskey);
-				sauceUrl = "https://" + authentication.getUsername() + ":" + authentication.getAccessKey() + seleniumURI + "/wd/hub";
-			}
-
-			/**
-			 * ThreadLocal variable which contains the {@link AndroidDriver} instance which
-			 * is used to perform browser interactions with.
-			 */
-			driverThread = new ThreadLocal<AppiumDriver>();
-
-			/**
-			 * ThreadLocal variable which contains the Sauce Job Id.
-			 */
-			ThreadLocal<String> sessionId = new ThreadLocal<String>();
-
-			if (platformName.equalsIgnoreCase("Android")) {
-				capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, AutomationName.ANDROID_UIAUTOMATOR2);
-				// Launch remote browser and set it as the current thread
-				driverThread.set(new AndroidDriver(new URL(sauceUrl), capabilities));
-			} else {
-				capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, AutomationName.IOS_XCUI_TEST);
-				driverThread.set(new IOSDriver(new URL(sauceUrl), capabilities));
-			}
-			id = ((RemoteWebDriver) driverThread.get()).getSessionId().toString();
-			sessionId.set(id);
-			appiumDriver = driverThread.get();
-			appiumDriver.get(configFileObj.getProperty("URL"));
-			//appiumDriver.get("http://appiumpro.com/contact");
-		}
 		}
 		return appiumDriver;
 
-	  }
-	
-	@AfterMethod
-    public void tearDown(ITestResult result) throws Exception {
-		if(appiumDriver != null) {
-		if (!isSauce) {
-			appiumDriver.quit();
-			stopAppiumServer();
-		} else {
-			try {
-			SauceREST client = new SauceREST(username,accesskey);
-			Map<String, Object> updates = new HashMap<>();
-			updates.put("passed", result.isSuccess() ? "passed" : "failed");
-			client.updateJobInfo(appiumDriver.getSessionId().toString(), updates);
-			} catch (Exception e) {
-				// May be its a real device
-			}
-	        driverThread.get().quit();
-		}
-		}
-       
-    }
+	}
 
-	
+
+	private static String getFirstNonNativeContextHandle(AppiumDriver<WebElement> appiumDriver2) {
+		for (Object context : appiumDriver2.getContextHandles()) {
+			String contextValue = String.valueOf(context);
+			if (context != null && !"NATIVE_APP".equals(contextValue)) {
+				return contextValue;
+			}
+		}
+		throw new RuntimeException("Unable to find any web context");
+	}
+
+	@AfterMethod
+	public void tearDown(ITestResult result) throws Exception {
+		if (appiumDriver != null) {
+			if (!isSauce) {
+				appiumDriver.quit();
+				stopAppiumServer();
+			} else {
+				try {
+					if (appiumDriver.getSessionId() != null && !executionEnvironmentReport.equalsIgnoreCase("SauceLabs - RealDevice")) {
+						SauceREST client = new SauceREST(username, accesskey);
+						Map<String, Object> updates = new HashMap<>();
+						updates.put("passed", result.isSuccess() ? "passed" : "failed");
+						client.updateJobInfo(appiumDriver.getSessionId().toString(), updates);
+					}
+				} catch (Exception e) {
+					// May be exception raise
+				}
+				driverThread.get().quit();
+			}
+		}
+
+	}
+
+
 }

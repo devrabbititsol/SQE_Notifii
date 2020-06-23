@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.openqa.selenium.winium.WiniumDriverService;
 
-public class Test {
+public class DesktopLocalRunner {
 public static void main(String[] args) {
 	String winiumDriverPath = "C:\\Users\\Ralimili\\Desktop\\Winium.Desktop.Driver.exe";
 	File drivePath = new File(winiumDriverPath);

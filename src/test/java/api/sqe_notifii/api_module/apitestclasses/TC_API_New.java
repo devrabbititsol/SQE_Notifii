@@ -33,10 +33,11 @@ public class TC_API_New extends BaseClass {
 				if(urlParams == null) return;
 				String headers = (String) c.getField("headers" + i).get(object);
 				String body = (String) c.getField("body" + i).get(object);
+				String apiName = (String) c.getField("apiName" + i).get(object);
 				String datasetResources = (String) c.getField("datasetResources" + i).get(object);
 				int reqType = (Integer) c.getField("requestType" + i).get(object);
 				int bodyType = (Integer) c.getField("bodyType" + i).get(object);
-				String response = APIService.callRequest(configFileObj, urlParams, headers, reqType, bodyType, body, configFileObj.getProperty("dataset" +i), datasetResources, logger);
+				String response = APIService.callRequest(configFileObj,apiName, urlParams, headers, reqType, bodyType, body, configFileObj.getProperty("dataset" +i), datasetResources, authenticationData, formurlEncodedData, formData, linkParams, logger);
 			}
 
 		/*--------------------- GET --------------------- */
@@ -48,10 +49,11 @@ public class TC_API_New extends BaseClass {
 				if(urlParams == null) return;
 				String headers = (String) c.getField("headers" + i).get(object);
 				String body = (String) c.getField("body" + i).get(object);
+				String apiName = (String) c.getField("apiName" + i).get(object);
 				String datasetResources = (String) c.getField("datasetResources" + i).get(object);
 				int reqType = (Integer) c.getField("requestType" + i).get(object);
 				int bodyType = (Integer) c.getField("bodyType" + i).get(object);
-				String response = APIService.callRequest(configFileObj, urlParams, headers, reqType, bodyType, body, configFileObj.getProperty("dataset" +i), datasetResources, logger);
+				String response = APIService.callRequest(configFileObj,apiName, urlParams, headers, reqType, bodyType, body, configFileObj.getProperty("dataset" +i), datasetResources, authenticationData, formurlEncodedData, formData, linkParams, logger);
 			}
 		}
 	}}

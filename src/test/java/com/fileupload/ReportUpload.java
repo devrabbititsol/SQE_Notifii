@@ -1,37 +1,20 @@
 package com.fileupload;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.testng.annotations.AfterSuite;
-
 import com.configurations.GlobalData;
 import com.restassured.services.ReportPaths;
 import com.utilities.BaseClass;
 import com.utilities.Utilities;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.testng.annotations.AfterSuite;
+
+import java.io.File;
 
 @SuppressWarnings("unused")
 public class ReportUpload extends BaseClass {
 	String primaryInfo = "";
-	private String projectPath = System.getProperty("user.dir");
-	private String reportsPath = projectPath + File.separator + "APIReports" + File.separator + ReportPaths.reportPathName;
+	private final String projectPath = System.getProperty("user.dir");
+	private final String reportsPath = projectPath + File.separator + "APIReports" + File.separator + ReportPaths.reportPathName;
 	private String resultCount;
 	private String datasetResult;
 	private String reportstatus;
@@ -56,7 +39,7 @@ public class ReportUpload extends BaseClass {
 	public void uploadReport() throws Exception {
 	
 		try {
-			System.out.println("rajja" +GlobalData.getPrimaryInfo());
+			//System.out.println(GlobalData.getReportData());
 			JSONObject primaryInfoObj = new JSONObject(GlobalData.getPrimaryInfo());
 			boolean is_web = primaryInfoObj.optBoolean("is_web");
 			boolean isDesktopAutomation = primaryInfoObj.optBoolean("is_Desktop_Automation");
@@ -109,10 +92,12 @@ public class ReportUpload extends BaseClass {
 			//System.out.println("client_time_zone_id"+  client_timezoneId);
 			//primaryInfo.put("report_data", GlobalData.getReportData().toString());
 			primaryInfo.put("testcases_result", testcasesArray);
+			primaryInfo.put("testcases_result", testcasesArray);
 			
 			System.out.println(primaryInfo.toString());
 			
 			Utilities.doSaveElementsToServer(report_upload_url, primaryInfo.toString());
+			
 			
 			//new FileUploaderClient().uploadFile(report_upload_url, reportsPath, userId,executedUserId, testcaseId, testsetId, moduleId, subModuleId, is_web, resultCount, GlobalData.getReportData().toString(), mobile, client_timezoneId,datasetResult,false, startExecutionTime,endExecutionTime);
 			
